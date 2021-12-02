@@ -14,7 +14,6 @@ import telegram.ext as tg
 from pyrogram import Client
 from psycopg2 import Error
 from dotenv import load_dotenv
-from requests.exceptions import RequestException
 
 faulthandler.enable()
 
@@ -47,7 +46,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download .netrc {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -62,10 +61,13 @@ PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 alive = subprocess.Popen(["python3", "alive.py"])
 nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
+if not os.path.exists('.netrc'):
+    subprocess.run(["touch", ".netrc"])
 subprocess.run(["chmod", "600", ".netrc"])
 subprocess.run(["chmod", "+x", "aria.sh"])
 subprocess.run(["./aria.sh"], shell=True)
 time.sleep(0.5)
+
 Interval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
@@ -336,6 +338,11 @@ try:
 except KeyError:
     BLOCK_MEGA_LINKS = False
 try:
+    WEB_PINCODE = getConfig('WEB_PINCODE')
+    WEB_PINCODE = WEB_PINCODE.lower() == 'true'
+except KeyError:
+    WEB_PINCODE = False
+try:
     SHORTENER = getConfig('SHORTENER')
     SHORTENER_API = getConfig('SHORTENER_API')
     if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
@@ -396,7 +403,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -413,7 +420,7 @@ try:
                     f.close()
             else:
                 logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
-        except RequestException as e:
+        except Exception as e:
             logging.error(str(e))
             raise KeyError
         subprocess.run(["unzip", "-q", "-o", "accounts.zip"])
@@ -432,7 +439,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -448,7 +455,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
